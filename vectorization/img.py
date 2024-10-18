@@ -14,7 +14,7 @@ transform = transforms.Compose([
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
 ])
 
-image = Image.open("path_to_your_image.jpg")
+image = Image.open(r'sukuna.jpg')
 input_tensor = transform(image).unsqueeze(0)
 
 with torch.no_grad():
