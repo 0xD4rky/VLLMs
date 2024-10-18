@@ -37,30 +37,58 @@ print(f"Embedding median: {np.median(embedding_np):.4f}")
 cube_size = int(np.cbrt(embedding.shape[0]))
 embedding_3d = embedding[:cube_size**3].reshape((cube_size, cube_size, cube_size))
 
-# Create 3D plot
-fig = plt.figure(figsize=(10, 8))
-ax = fig.add_subplot(111, projection='3d')
+## --------------------------- PLOTTING 3D POINTS --------------------------##
 
-# Create a meshgrid for the cube
+
+"""
+With the statistics in hand now, focus now will be on plotting 2048 dim vectors into 3D.
+"""
+
+
+fig = plt.figure(figsize=(12, 10))
+ax = fig.add_subplot(111, projection='3d')
+fig.patch.set_facecolor('black')
+ax.set_facecolor('black')
+
+
 x, y, z = np.indices(embedding_3d.shape)
 
-# Plot the cube
-sc = ax.scatter(x, y, z, c=embedding_3d.flatten(), cmap='viridis')
 
-# Set labels and title
-ax.set_xlabel('X')
-ax.set_ylabel('Y')
-ax.set_zlabel('Z')
-ax.set_title('3D Visualization of Single Image Embedding')
+sc = ax.scatter(x, y, z, c=embedding_3d.flatten(), cmap='plasma', s=5)
 
-# Add a color bar
-plt.colorbar(sc)
 
-# Show plot
+ax.set_xlabel('X', color='white')
+ax.set_ylabel('Y', color='white')
+ax.set_zlabel('Z', color='white')
+ax.set_title('3D Visualization of Single Image Embedding', color='white')
+
+
+ax.tick_params(axis='x', colors='white')
+ax.tick_params(axis='y', colors='white')
+ax.tick_params(axis='z', colors='white')
+
+
+cbar = plt.colorbar(sc)
+cbar.ax.yaxis.set_tick_params(color='white')
+plt.setp(plt.getp(cbar.ax.axes, 'yticklabels'), color='white')
+
+
+ax.grid(False)
+ax.xaxis.pane.fill = False
+ax.yaxis.pane.fill = False
+ax.zaxis.pane.fill = False
+ax.xaxis.pane.set_edgecolor('none')
+ax.yaxis.pane.set_edgecolor('none')
+ax.zaxis.pane.set_edgecolor('none')
+
+
+ax.view_init(elev=20, azim=45)
+
+
 plt.tight_layout()
 plt.show()
 
-# Print some statistics about the embedding
+
 print(f"Embedding shape: {embedding.shape}")
 print(f"Embedding mean: {np.mean(embedding)}")
 print(f"Embedding std: {np.std(embedding)}")
