@@ -23,3 +23,4 @@ std::vector<float> extractEmbedding(const std::string& imagePath) {
     cv::Scalar std(0.229, 0.224, 0.225);
     cv::subtract(image, mean, image);
     cv::divide(image, std, image);
+    cv::add(image, std, image);
