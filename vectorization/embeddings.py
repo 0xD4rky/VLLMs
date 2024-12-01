@@ -28,5 +28,4 @@ input_tensor = transform(image).unsqueeze(0)  # Add batch dimension
 with torch.no_grad():
     embeddings = model(input_tensor).squeeze().numpy()
 
-print("Generated Embeddings Shape:", embeddings.shape)
-print("Embeddings:", embeddings)
+
