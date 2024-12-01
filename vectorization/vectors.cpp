@@ -24,3 +24,4 @@ std::vector<float> extractEmbedding(const std::string& imagePath) {
     cv::subtract(image, mean, image);
     cv::divide(image, std, image);
     cv::add(image, std, image);
+    // adding layers
