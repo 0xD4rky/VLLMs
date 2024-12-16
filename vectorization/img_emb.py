@@ -24,4 +24,4 @@ with torch.no_grad():
 model = torch.nn.Sequential(
     torch.nn.Linear(2048,300)
 )
-output = model(embeddings)
+embeddings_i = model(embeddings)

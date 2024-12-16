@@ -19,4 +19,3 @@ with torch.no_grad():
     
 conv = torch.nn.Linear(768,300)
 embeddings_t = conv(text_embeddings).squeeze()
-print(embeddings_t.shape)
