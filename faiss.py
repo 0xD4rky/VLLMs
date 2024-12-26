@@ -52,3 +52,46 @@ ds_with_embeddings = ds_with_embeddings.map(
         .numpy()
     }
 )
+
+ds_with_embeddings.add_faiss_index(column="embeddings")
+ds_with_embeddings.add_faiss_index(column="image_embeddings")
+
+def search(query, k=3):
+    """
+    Search for the k most similar examples to the query using the FAISS index
+    and return the scores and the retrieved examples.
+
+    args: 
+    1. query (str): the query to search for
+    2. k (int): the number of examples to retrieve
+    """
+    prompt_embedding = (
+    model.get_text_features(
+        **tokenizer([query], return_tensors = "pt", truncation = True
+    ).to("cuda"))[0]
+    .detach()
+    .cpu()
+    .numpy()
+    )
+
+    scores, retrieved_examples = ds_with_embeddings.get_nearest_examples("embeddings", prompt_embedding, k=k)
+    return scores, retrieved_examples
+
+scores, retrieved_examples = search("snow on ground")
+print(f"the length of train dataset: {len(dataset['train'])}")
+print(f"the length of query retrieved set: {len(retrieved_examples)}")
+
+def downscale_image(image):
+
+  """
+  downscaling the image for better view
+  """
+  width = 200
+  ratio = width / float(image.size[0])
+  height = int(image.size[1] * float(ratio))
+  img = image.resize((width,height),Image.Resampling.LANCZOS)
+  return img
+
+images = [downscale_image(image) for image in retrieved_examples["image"]]
+print(retrieved_examples["image_description"][2])
+images[2]
