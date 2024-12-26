@@ -5,6 +5,7 @@ from PIL import Image
 import numpy as np
 from transformers import AutoModel, AutoTokenizer, AutoImageProcessor
 import faiss
+import requests
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -56,8 +57,10 @@ ds_with_embeddings = ds_with_embeddings.map(
 ds_with_embeddings.add_faiss_index(column="embeddings")
 ds_with_embeddings.add_faiss_index(column="image_embeddings")
 
-def search(query, k=3):
+def text_search(query, k=3):
     """
+    Querying the data with text prompts
+
     Search for the k most similar examples to the query using the FAISS index
     and return the scores and the retrieved examples.
 
@@ -77,7 +80,7 @@ def search(query, k=3):
     scores, retrieved_examples = ds_with_embeddings.get_nearest_examples("embeddings", prompt_embedding, k=k)
     return scores, retrieved_examples
 
-scores, retrieved_examples = search("snow on ground")
+scores, retrieved_examples = text_search("snow on ground")
 print(f"the length of train dataset: {len(dataset['train'])}")
 print(f"the length of query retrieved set: {len(retrieved_examples)}")
 
@@ -95,3 +98,35 @@ def downscale_image(image):
 images = [downscale_image(image) for image in retrieved_examples["image"]]
 print(retrieved_examples["image_description"][2])
 images[2]
+
+def image_search(url, k=3):
+    """
+    Querying the data with image prompts
+
+    Search for the k most similar examples to the query using the FAISS index
+    and return the scores and the retrieved examples.
+
+    args:
+    1. query (str): the query to search for
+    2. k (int): the number of examples to retrieve
+    """
+    image = Image.open(requests.get(url, stream=True).raw)
+    img_embedding = (
+    model.get_image_features(**processor([image], return_tensors="pt", truncation=True).to("cuda"))[0]
+    .detach()
+    .cpu()
+    .numpy()
+    )
+    scores, retrieved_examples = ds_with_embeddings.get_nearest_examples("image_embeddings", img_embedding, k=k)
+    return scores, retrieved_examples
+
+
+url = "https://huggingface.co/datasets/huggingface/documentation-images/resolve/main/transformers/beaver.png"
+scores, retrieved_examples = image_search(url)
+print(f"the length of train dataset: {len(dataset['train'])}")
+print(f"the length of query retrieved set: {len(retrieved_examples)}")
+images = [downscale_image(image) for image in retrieved_examples["image"]]
+image = Image.open(requests.get(url, stream=True).raw)
+print(f"original image : {display(image)}")
+print(retrieved_examples["image_description"])
+display(images[0])
