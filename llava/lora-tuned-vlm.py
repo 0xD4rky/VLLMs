@@ -49,3 +49,15 @@ def main():
         dataloader_num_workers=32,
         logging_steps=10,
     )
+    trainer = DPOTrainer(
+        model,
+        ref_model=None,  # Not needed when using PEFT
+        args=training_args,
+        train_dataset=dataset,
+        tokenizer=processor,
+        peft_config=LoraConfig(target_modules="all-linear"),
+    )
+    trainer.train()
+
+if __name__ == "__main__":
+    main()
