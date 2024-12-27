@@ -36,3 +36,16 @@ def main():
     f = dataset.features
     f["images"] = features.Sequence(features.Image(decode=True))
     dataset = dataset.cast(f)
+
+    print("Setting up training...")
+    training_args = DPOConfig(
+        output_dir="idefics2-8b-dpo",
+        bf16=True,
+        gradient_checkpointing=True,
+        per_device_train_batch_size=2,
+        gradient_accumulation_steps=32,
+        num_train_epochs=1,
+        dataset_num_proc=32,
+        dataloader_num_workers=32,
+        logging_steps=10,
+    )
