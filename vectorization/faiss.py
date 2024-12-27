@@ -4,7 +4,7 @@ import torch
 from PIL import Image
 import numpy as np
 from transformers import AutoModel, AutoTokenizer, AutoImageProcessor
-import faiss
+import vectorization.faiss as faiss
 import requests
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
