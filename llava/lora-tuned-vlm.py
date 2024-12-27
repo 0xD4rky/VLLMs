@@ -13,6 +13,15 @@ def main():
 
     print("Loading dataset...")
     dataset = load_dataset("openbmb/RLAIF-V-Dataset", split="train")
+    lora_config = LoraConfig(
+        r=8, 
+        lora_alpha=16,  
+        target_modules=["encoder.layers.*.self_attn.*", "decoder.layers.*.self_attn.*"],  # Apply to specific modules
+        lora_dropout=0.1,
+        bias="none",
+        task_type="SEQ_2_SEQ_LM",
+    )
+    model = get_peft_model(model, lora_config)
 
     model = tq.quantize_dynamic(
         model, 
