@@ -19,3 +19,20 @@ def main():
         {torch.nn.Linear},  
         dtype=torch.qint8  
     )
+
+    def format(example):
+        
+        prompt = [{"role": "user", "content": [{"type": "image"}, {"type": "text", "text": example["question"]}]}]
+        chosen = [{"role": "assistant", "content": [{"type": "text", "text": example["chosen"]}]}]
+        rejected = [{"role": "assistant", "content": [{"type": "text", "text": example["rejected"]}]}]
+        prompt = processor.apply_chat_template(prompt, tokenize=False)
+        chosen = processor.apply_chat_template(chosen, tokenize=False)
+        rejected = processor.apply_chat_template(rejected, tokenize=False)
+        max_size = processor.image_processor.size["longest_edge"] // 2
+        example["image"].thumbnail((max_size, max_size))
+        return {"images": [example["image"]], "prompt": prompt, "chosen": chosen, "rejected": rejected}
+
+    dataset = dataset.map(format, remove_columns=dataset.column_names, num_proc=32)
+    f = dataset.features
+    f["images"] = features.Sequence(features.Image(decode=True))
+    dataset = dataset.cast(f)
