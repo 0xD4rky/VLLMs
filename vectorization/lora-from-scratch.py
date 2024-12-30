@@ -18,3 +18,15 @@ class LoRALayer(torch.nn.Module):
         x = self.alpha * (x @ self.A @ self.B)
         return x
     
+
+"""
+LoRA is a method that can be applied to various types of neural networks, 
+not just generative models like GPT or image generation models. 
+For this hands-on example, we will train a small BERT model for text classification 
+because classification accuracy is easier to evaluate than generated text
+"""
+
+from transformers import AutoModelForSequenceClassification
+
+model = AutoModelForSequenceClassification.from_pretrained(
+    "distilbert-base-uncased", num_labels=2)
