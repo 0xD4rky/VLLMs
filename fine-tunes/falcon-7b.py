@@ -1,6 +1,11 @@
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 
+from datasets import load_dataset
+
+dataset_name = "timdettmers/openassistant-guanaco"
+dataset = load_dataset(dataset_name, split="train")
+
 model_name = "ybelkada/falcon-7b-sharded-bf16"
 
 bnb_config = BitsAndBytesConfig(
@@ -70,3 +75,10 @@ training_arguments = SFTConfig(
     gradient_checkpointing=True,
 )
 
+trainer = SFTTrainer(
+    model=model,
+    train_dataset=dataset,
+    peft_config=peft_config,
+    tokenizer=tokenizer,
+    args=training_arguments,
+)
