@@ -15,5 +15,4 @@ model = AutoModelForCausalLM.from_pretrained(
 )
 model.config.use_cache = False
 tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
-tokenizer.pad_token = tokenizer.eos_token
 
