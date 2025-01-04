@@ -82,3 +82,10 @@ trainer = SFTTrainer(
     tokenizer=tokenizer,
     args=training_arguments,
 )
+
+# for a stable training, upcast the layernorms in float32
+for name, module in trainer.model.named_modules():
+    if "norm" in name:
+        module = module.to(torch.float32)
+
+trainer.train()
