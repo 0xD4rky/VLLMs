@@ -47,6 +47,22 @@ class SigLipVisionEmbeddings(nn.Module):
             padding = "valid"
         )
 
+        self.num_patches = (self.img_size // self.patch_size) ** 2
+        self.positional_embedding = nn.Embedding(self.num_patches, self.emb_dim)
+        self.register_buffer(
+            "position_ids",
+            torch.arange(self.num_positions).expand((1, -1)),
+            persistent=False
+        )
+
+    def forward(self,pixel_values: torch.FloatTensor) -> torch.Tensor:
+        _, _, height, width = pixel_values.shape # {b,c,H,W}
+        emd = self.patch_embedding(pixel_values)
+        emd = nn.Flatten(2)
+        emd = emd.transpose(1,2)
+        emb = emb + self.positional_embedding(self.position_ids)
+        return emb
+        # {b,num_patches,emb_dim}
 
 
 class SigLipVisionTransformer(nn.Module):
