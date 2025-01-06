@@ -30,8 +30,27 @@ class SigLipVisionConfig:
         self.attention_dropout = attention_dropout
         self.num_image_tokens = num_image_tokens
 
-class SigLipVisionTransformer(nn.Module):
+
+class SigLipVisionEmbeddings(nn.Module):
+
+    def __init__(self, config: SigLipVisionConfig):
+        super().__init__()
+        self.emb_dim = config.hidden_size
+        self.patch_size = config.patch_size
+        self.image_size = config.image_size
     
+        self.patch_embedding = nn.Conv2d(
+            in_channels = config.num_channels,
+            out_channels = self.emb_dim,
+            kernel_size = self.patch_size,
+            stride = self.patch_size,
+            paddind = "valid"
+        )
+
+
+
+class SigLipVisionTransformer(nn.Module):
+
     def __init__(self, config: SigLipVisionConfig):
         super().__init__()
         self.config = config
