@@ -2,7 +2,7 @@ from typing import Optional, Tuple
 import torch
 import torch.nn as nn
 
-class SigLipConfig:
+class SigLipVisionConfig:
 
     def __init__(
             self,
@@ -29,4 +29,35 @@ class SigLipConfig:
         self.layer_norm_eps = layer_norm_eps
         self.attention_dropout = attention_dropout
         self.num_image_tokens = num_image_tokens
+
+class SigLipVisionTransformer(nn.Module):
+    
+    def __init__(self, config: SigLipVisionConfig):
+        super().__init__()
+        self.config = config
+        emb_dim = config.hidden_size
+
+        self.embeddings = SigLipVisionEmbeddings(config)
+        self.encoder = SigLipEncoder(config)
+        self.post_layernorm = nn.LayerNorm(emb_dim, ps = config.layer_norm_eps)
+
+    def forward(self, pixel_values: torch.Tensor) -> torch.Tensor : 
+
+        hidden_states = self.embeddings(pixel_values)
+        last_hidden_state = self.encoder(inputs_embds = hidden_states)
+        last_hidden_state = self.post_layernorm(last_hidden_state)
+        return last_hidden_state
+
+
+class SigLipVisionModel(nn.Module):
+
+    def __init__(self, config: SigLipVisionConfig):
+        super().__init__()
+        self.config = config
+        self.vision_model = SigLipVisionTransformer(config)
         
+    def forward(self, pixel_values) -> Tuple:
+        """
+        my vit would convert {batch,channels,h,w} -> {batch,num_patches,emb_dim}
+        """
+        return self.vision_model(pixel_values = pixel_values)
