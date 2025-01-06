@@ -44,7 +44,7 @@ class SigLipVisionEmbeddings(nn.Module):
             out_channels = self.emb_dim,
             kernel_size = self.patch_size,
             stride = self.patch_size,
-            paddind = "valid"
+            padding = "valid"
         )
 
 
