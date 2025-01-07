@@ -35,20 +35,20 @@ class SigLipVisionEmbeddings(nn.Module):
 
     def __init__(self, config: SigLipVisionConfig):
         super().__init__()
-        self.emb_dim = config.hidden_size
+        self.embed_dim = config.hidden_size
         self.patch_size = config.patch_size
         self.image_size = config.image_size
     
         self.patch_embedding = nn.Conv2d(
             in_channels = config.num_channels,
-            out_channels = self.emb_dim,
+            out_channels = self.embed_dim,
             kernel_size = self.patch_size,
             stride = self.patch_size,
             padding = "valid"
         )
 
         self.num_patches = (self.img_size // self.patch_size) ** 2
-        self.positional_embedding = nn.Embedding(self.num_patches, self.emb_dim)
+        self.positional_embedding = nn.Embedding(self.num_patches, self.embed_dim)
         self.register_buffer(
             "position_ids",
             torch.arange(self.num_positions).expand((1, -1)),
@@ -62,7 +62,34 @@ class SigLipVisionEmbeddings(nn.Module):
         emd = emd.transpose(1,2)
         emb = emb + self.positional_embedding(self.position_ids)
         return emb
-        # {b,num_patches,emb_dim}
+        # {b,num_patches,embed_dim}
+
+class SigLipEncoderLayer(nn.Module):
+
+    def __init__(self, config: SigLipVisionConfig):
+        super().__init__()
+        self.embed_dim = config.hidden_size
+        self.layer_norm1 = nn.LayerNorm(self.embed_dim, config.layer_norm_eps)
+        self.layer_norm2 = nn.LayerNorm(self.embed_dim, config.layer_norm_eps)
+        self.self_attn = SigLipAttention(config)
+        self.mlp = SigLipMLP(config)
+    
+    def forward(
+        self,
+        hidden_states: torch.Tensor
+        ) -> torch.Tensor:
+
+        residual = hidden_states
+        hidden_states = self.layer_norm1(hidden_states)
+        hidden_states, _ = self.self_attn(hidden_states = hidden_states)
+        hidden_states = hidden_states + residual
+        residual = hidden_states
+        hidden_states = self.layer_norm2(hidden_states)
+        hidden_states = self.mlp(hidden_states)
+        hidden_states = hidden_states + residual
+        
+        return hidden_states
+
 
 
 class SigLipVisionTransformer(nn.Module):
@@ -70,11 +97,11 @@ class SigLipVisionTransformer(nn.Module):
     def __init__(self, config: SigLipVisionConfig):
         super().__init__()
         self.config = config
-        emb_dim = config.hidden_size
+        embed_dim = config.hidden_size
 
         self.embeddings = SigLipVisionEmbeddings(config)
         self.encoder = SigLipEncoder(config)
-        self.post_layernorm = nn.LayerNorm(emb_dim, ps = config.layer_norm_eps)
+        self.post_layernorm = nn.LayerNorm(embed_dim, ps = config.layer_norm_eps)
 
     def forward(self, pixel_values: torch.Tensor) -> torch.Tensor : 
 
@@ -93,6 +120,6 @@ class SigLipVisionModel(nn.Module):
         
     def forward(self, pixel_values) -> Tuple:
         """
-        my vit would convert {batch,channels,h,w} -> {batch,num_patches,emb_dim}
+        my vit would convert {batch,channels,h,w} -> {batch,num_patches,embed_dim}
         """
         return self.vision_model(pixel_values = pixel_values)
