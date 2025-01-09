@@ -64,6 +64,22 @@ class SigLipVisionEmbeddings(nn.Module):
         return emb
         # {b,num_patches,embed_dim}
 
+class SigLipAttention(nn.Module):
+
+    def __init__(self,config: SigLipVisionConfig):
+        super().__init__()
+        self.config = config
+        self.emb_dim = config.hidden_size 
+        self.num_heads = config.num_attention_heads
+        self.head_dim = self.emb_dim // self.num_heads
+        self.scale = self.head_dim ** -0.5  
+        self.dropout = config.attention_dropout
+
+        self.q_prok = nn.Linear(self.emb_dim, self.emb_dim)
+        self.k_proj = nn.Linear(self.emb_dim, self.emb_dim)
+        self.v_proj = nn.Linear(self.emb_dim, self.emb_dim)
+        self.out_proj = nn.Linear(self.emb_dim, self.emb_dim)  
+
 class SigLipMLP(nn.Module):
 
     def __init__(self, config: SigLipVisionConfig):
