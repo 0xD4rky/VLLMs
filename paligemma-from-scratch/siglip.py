@@ -80,6 +80,31 @@ class SigLipAttention(nn.Module):
         self.v_proj = nn.Linear(self.emb_dim, self.emb_dim)
         self.out_proj = nn.Linear(self.emb_dim, self.emb_dim)  
 
+    def forward(
+        self, 
+        hidden_states : torch.Tensor) -> Tuple[torch.Tensor, Optional[torch.Tensor]]:
+
+        batch_size, seq_len, _ = hidden_states.size()
+        query_states = self.proj(hidden_states)
+        key_states = self.proj(hidden_states)
+        value_states = self.proj(hidden_states)
+        # [B,S,D] -> [B,S,No of Heads, Head Dim] -> [B, No of heads, S, Head Dim] (for MHA)
+        query_states = query_states.view(batch_size, seq_len, self.num_heads, self.head_dim).transpose(1,2)
+        key_states = key_states.view(batch_size, seq_len, self.num_heads, self.head_dim).transpose(1,2)
+        value_states = value_states.view(batch_size, seq_len, self.num_heads, self.head_dim).transpose(1,2)
+
+        attn_weights = (torch.matmul(query_states , key_states.transpose(2,3)) * self.scale)
+
+        if attn_weights.size() != (batch_size, self.num_heads, seq_len, seq_len):
+
+            raise ValueError(
+                f"Attention weights should be of size {(batch_size, self.num_heads, seq_len, seq_len)}, but is"
+                f" {attn_weights.size()}"
+            )
+
+        
+
+        
 class SigLipMLP(nn.Module):
 
     def __init__(self, config: SigLipVisionConfig):
