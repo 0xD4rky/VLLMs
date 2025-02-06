@@ -102,7 +102,23 @@ class SigLipAttention(nn.Module):
                 f" {attn_weights.size()}"
             )
 
+        attn_weights = nn.functional.softmax(attn_weights, dim = -1, dtype = torch.float32).to(query_states.dtype)
+        attn_weights = nn.functional.dropout(attn_weights, p=self.dropout, training=self.training)
+        attn_output = torch.matmul(attn_weights, value_states)
+
+        if attn_output.size() != (batch_size, self.num_heads, seq_len, self.head_dim):
+            raise ValueError(
+                f"`attn_output` should be of size {(batch_size, self.num_heads, seq_len, self.head_dim)}, but is"
+                f" {attn_output.size()}"
+            )
         
+        attn_output = attn_output.transpose(1, 2).contiguous() #{b,no_heads,no_patches,head_dim -> b,no_patches,no_heads,head_dim}
+        attn_output = attn_output.reshape(batch_size, seq_len, self.embed_dim)
+        attn_output = self.out_proj(attn_output)
+        return attn_output, attn_weights
+
+
+
 
         
 class SigLipMLP(nn.Module):
